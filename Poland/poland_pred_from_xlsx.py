@@ -18,8 +18,7 @@ from sklearn.externals import joblib
 clf_EW_poland = joblib.load('EW_DK_POLAND_dummy.pkl')
 df = pd.read_excel('Poland_Database.xlsx', header = [0, 1])
 
-
-datalist = df.as_matrix()
+datalist = df.values
 for virksomhed in range(0, len(datalist), 1):
     dict_input_poland = {}
     for tekst, col in (('fsa:NoncurrentAssets_prev', 12),
