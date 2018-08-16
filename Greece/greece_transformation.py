@@ -7,12 +7,11 @@ Created on Tue Apr 10 18:24:10 2018
 """
 
 import numpy as np
+from numpy import math
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_extraction import DictVectorizer
 
-
-class Polish_to_dict(BaseEstimator, TransformerMixin):
+class greece_to_dict(BaseEstimator, TransformerMixin):
     """Extract features from each document for DictVectorizer"""
 
     def fit(self, x, y=None):
@@ -30,7 +29,8 @@ class Polish_to_dict(BaseEstimator, TransformerMixin):
                 for felt in ('fsa:Assets',
                              'fsa:NoncurrentAssets',  'fsa:IntangibleAssets',  'fsa:PropertyPlantAndEquipment',  'fsa:LongtermInvestmentsAndReceivables',
                              'fsa:CurrentAssets',  'fsa:Inventories',  'fsa:ShorttermReceivables', 'fsa:ShorttermInvestments', 'fsa:CashAndCashEquivalents',  
-                             'fsa:Equity', 'fsa:LiabilitiesOtherThanProvisions', 'fsa:LongtermLiabilitiesOtherThanProvisions', 'fsa:ShorttermLiabilitiesOtherThanProvisions', 'fsa:Provisions'):                    
+                             'fsa:Equity', 'fsa:LiabilitiesOtherThanProvisions', 'fsa:LongtermLiabilitiesOtherThanProvisions', 'fsa:ShorttermLiabilitiesOtherThanProvisions', 'fsa:Provisions',
+                             'fsa:GrossResult', 'fsa:GrossProfitLoss', 'fsa:ProfitLossFromOrdinaryOperatingActivities', 'fsa:ProfitLoss'):                    
                     if felt in dict:
                         try:
                             dict[felt] = float(dict.get(felt, 0))
@@ -63,13 +63,39 @@ class Polish_to_dict(BaseEstimator, TransformerMixin):
                         dict['egenkap_forrentning'] = -9
                 except:
                     pass
-
+                if ('fsa:GrossResult' in dict) and ('fsa:GrossProfitLoss' in dict):
+                    dict['GrossProfit'] = max(dict.get('fsa:GrossResult', None), dict.get('fsa:GrossProfitLoss', None))
+                elif ('fsa:GrossResult' in dict) and ('fsa:GrossProfitLoss' not in dict):
+                    dict['GrossProfit'] = dict.get('fsa:GrossResult', None)
+                elif ('fsa:GrossResult' not in dict) and ('fsa:GrossProfitLoss' in dict):
+                    dict['GrossProfit'] = dict.get('fsa:GrossProfitLoss', None)
+                try:
+                    dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'] = (dict['GrossProfit'] - dict['fsa:ProfitLossFromOrdinaryOperatingActivities'])/dict['GrossProfit']
+                    dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'].replace({np.inf: 9, -np.inf: -9})
+                    if dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'] > 9:
+                        dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'] = 9
+                    if dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'] < -9:
+                        dict['GrossProfit_to_OrdinaryOperatingActivities_ratio'] = -9
+                        
+                except:
+                    pass                    
+                try:
+                    dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'] = (dict['fsa:ProfitLossFromOrdinaryOperatingActivities'] - dict['fsa:ProfitLoss'])/dict['GrossProfit']
+                    dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'].replace({np.inf: 9, -np.inf: -9})
+                    if dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'] > 9:
+                        dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'] = 9
+                    if dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'] < -9:
+                        dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio'] = -9
+                except:
+                    pass 
                         
                 if ('fsa:Assets_prev' in dict) or ('fsa:ProfitLoss_prev' in dict) or ('fsa:Equity_prev' in dict):
                     for felt in ('fsa:Assets',
                                  'fsa:NoncurrentAssets',  'fsa:IntangibleAssets',  'fsa:PropertyPlantAndEquipment',  'fsa:LongtermInvestmentsAndReceivables',
                                  'fsa:CurrentAssets',  'fsa:Inventories',  'fsa:ShorttermReceivables', 'fsa:ShorttermInvestments', 'fsa:CashAndCashEquivalents',  
-                                 'fsa:Equity', 'fsa:LiabilitiesOtherThanProvisions', 'fsa:LongtermLiabilitiesOtherThanProvisions', 'fsa:ShorttermLiabilitiesOtherThanProvisions', 'fsa:Provisions'):                    
+                                 'fsa:Equity', 'fsa:LiabilitiesOtherThanProvisions', 'fsa:LongtermLiabilitiesOtherThanProvisions', 'fsa:ShorttermLiabilitiesOtherThanProvisions', 'fsa:Provisions',
+                                 'fsa:GrossResult', 'fsa:GrossProfitLoss', 'fsa:ProfitLossFromOrdinaryOperatingActivities', 'fsa:ProfitLoss'):                    
+
                         if felt + '_prev' in dict:
                             try:
                                 dict[felt + '_prev'] = float(dict.get(felt + '_prev', 0)) 
@@ -93,6 +119,30 @@ class Polish_to_dict(BaseEstimator, TransformerMixin):
                             dict['egenkap_forrentning_prev'] = 9
                         if dict['egenkap_forrentning_prev'] < -9:
                             dict['egenkap_forrentning_prev'] = -9
+                    except:
+                        pass
+                    if ('fsa:GrossResult_prev' in dict) and ('fsa:GrossProfitLoss_prev' in dict):
+                        dict['GrossProfit_prev'] = max(dict.get('fsa:GrossResult_prev', None), dict.get('fsa:GrossProfitLoss_prev', None))
+                    elif ('fsa:GrossResult_prev' in dict) and ('fsa:GrossProfitLoss_prev' not in dict):
+                        dict['GrossProfit_prev'] = dict.get('fsa:GrossResult_prev', None)
+                    elif ('fsa:GrossResult_prev' not in dict) and ('fsa:GrossProfitLoss_prev' in dict):
+                        dict['GrossProfit_prev'] = dict.get('fsa:GrossProfitLoss_prev', None)
+                    try:
+                        dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'] = (dict['GrossProfit_prev'] - dict['fsa:ProfitLossFromOrdinaryOperatingActivities_prev'])/dict['GrossProfit_prev']
+                        dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'].replace({np.inf: 9, -np.inf: -9})
+                        if dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'] > 9:
+                            dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'] = 9
+                        if dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'] < -9:
+                            dict['GrossProfit_to_OrdinaryOperatingActivities_ratio_prev'] = -9
+                    except:
+                        pass
+                    try:
+                        dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'] = (dict['fsa:ProfitLossFromOrdinaryOperatingActivities_prev'] - dict['fsa:ProfitLoss_prev'])/dict['GrossProfit_prev']
+                        dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'].replace({np.inf: 9, -np.inf: -9})
+                        if dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'] > 9:
+                            dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'] = 9
+                        if dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'] < -9:
+                            dict['OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev'] = -9
                     except:
                         pass
 
@@ -124,4 +174,9 @@ class Polish_to_dict(BaseEstimator, TransformerMixin):
                  'Provisions_ratio': dict.get('fsa:Provisions_ratio', 0),
                  'Return on Equity': dict.get('egenkap_forrentning', 0),
                  'Return on Equity_prev': dict.get('egenkap_forrentning_prev', 0),                     
+                 'GrossProfit_to_OrdinaryOperatingActivities_ratio': dict.get('GrossProfit_to_OrdinaryOperatingActivities_ratio', 0),
+                 'GrossProfit_to_OrdinaryOperatingActivities_ratio_prev': dict.get('GrossProfit_to_OrdinaryOperatingActivities_ratio_prev', 0),
+                 'OrdinaryOperatingActivities_to_ProfitLoss_ratio': dict.get('OrdinaryOperatingActivities_to_ProfitLoss_ratio', 0),
+                 'OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev': dict.get('OrdinaryOperatingActivities_to_ProfitLoss_ratio_prev', 0),
                  } for dict in posts]
+    

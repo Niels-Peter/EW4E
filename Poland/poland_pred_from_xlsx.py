@@ -11,12 +11,12 @@ import pandas as pd
 from poland_transformation import *
 import pickle
 from sklearn.externals import joblib
-
+from numpy import math
 
 #clf_EW_poland = joblib.load('/home/niels-peter/Dokumenter/EW_DK_POLAND.pkl')
 #df = pd.read_excel('/home/niels-peter/Dokumenter/Poland_Database.xlsx', header = [0, 1]) 
 clf_EW_poland = joblib.load('EW_DK_POLAND_dummy.pkl')
-df = pd.read_excel('Poland_Database.xlsx', header = [0, 1])
+df = pd.read_excel('poland_Database.xlsx', header = [0, 1])
 
 datalist = df.values
 for virksomhed in range(0, len(datalist), 1):
@@ -51,11 +51,14 @@ for virksomhed in range(0, len(datalist), 1):
                        ('fsa:ProfitLoss', 93),
                        ):
         vaerdi = datalist[virksomhed][col]
-        if str(vaerdi) == 'nan':
-            dict_input_poland[tekst] = 0
-        else:
-            dict_input_poland[tekst] = vaerdi
-    dict_input_poland['fsa:Assets'] = dict_input_poland['fsa:NoncurrentAssets'] + dict_input_poland['fsa:CurrentAssets'] + dict_input_poland['fsa:Prepayments']
-    dict_input_poland['fsa:Assets_prev'] = dict_input_poland['fsa:NoncurrentAssets_prev'] + dict_input_poland['fsa:CurrentAssets_prev'] + dict_input_poland['fsa:Prepayments_prev']
-    print(dict_input_poland)
-    print(virksomhed, clf_EW_poland.predict([dict_input_poland]))
+        dict_input_poland[tekst] = vaerdi
+    dict_input_poland['fsa:Assets'] = np.nan_to_num(dict_input_poland['fsa:NoncurrentAssets']) + np.nan_to_num(dict_input_poland['fsa:CurrentAssets']) + np.nan_to_num(dict_input_poland['fsa:Prepayments'])
+    dict_input_poland['fsa:Assets_prev'] = np.nan_to_num(dict_input_poland['fsa:NoncurrentAssets_prev']) + np.nan_to_num(dict_input_poland['fsa:CurrentAssets_prev']) + np.nan_to_num(dict_input_poland['fsa:Prepayments_prev'])
+    slettes = []
+    for noegle in dict_input_poland.keys():
+        if math.isnan(dict_input_poland[noegle]):
+            slettes.append(noegle)
+    for noegle in slettes:
+        del dict_input_poland[noegle]
+    #print(dict_input_poland)
+    print(virksomhed, clf_EW_poland.predict_proba([dict_input_poland]))
