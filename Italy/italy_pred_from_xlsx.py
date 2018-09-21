@@ -15,12 +15,16 @@ import re
 from italy_transformation import *
 
 
-clf_EW_italy = joblib.load('/home/niels-peter/Dokumenter/EW_DK_ITALY.pkl')
-#clf_EW_italy = joblib.load('EW_DK_ITALY_dummy.pkl')
+#clf_EW_italy = joblib.load('/home/niels-peter/Dokumenter/EW_DK_ITALY.pkl')
+clf_EW_italy = joblib.load('EW_DK_ITALY_dummy.pkl')
 
 
-xl = pd.ExcelFile('/home/niels-peter/Dokumenter/ITALY_100_FINANCIAL_STATEMENT.xlsx')
+#xl = pd.ExcelFile('/home/niels-peter/Dokumenter/ITALY_100_FINANCIAL_STATEMENT.xlsx')
+xl = pd.ExcelFile('italy_database.xlsx')
 
+
+output = []
+input_d = [] 
 for post in xl.sheet_names:
     df = xl.parse(post)
     columns =list(df)
@@ -69,7 +73,7 @@ for post in xl.sheet_names:
         if data[0] ==  'C.IV - Total liquid assets':
             dict_data['fsa:CashAndCashEquivalents'] = data[2]
             dict_data['fsa:CashAndCashEquivalents_prev'] = data[1]
-        if data[0] ==  ' A - Total equity ':
+        if data[0] ==  'A - Total equity':
             dict_data['fsa:Equity'] = data[2]
             dict_data['fsa:Equity_prev'] = data[1]
         if data[0] ==  'Difference between value and costs of production':
@@ -85,5 +89,27 @@ for post in xl.sheet_names:
             slettes.append(noegle)
     for noegle in slettes:
         del dict_data[noegle]
+    
+    input_d.append(dict_data)
+    
+    transform_italy = italy_to_dict()
+    transformed_data = transform_italy.transform([dict_data])
+    output.append(transformed_data[0])
 
     print(clf_EW_italy.predict([dict_data]), clf_EW_italy.predict_proba([dict_data]), post, col_year)
+
+#df_out = pd.DataFrame.from_dict(output)
+#df_in = pd.DataFrame.from_dict(input_d)
+#
+#import matplotlib.pyplot as plt
+##print(df_out.columns)
+#
+#col = []
+#for p in list(df_out):
+#    if 'ratio' in p:
+#        col.append(p)
+#
+#fig, ax = plt.subplots(figsize =(25,20))
+#df_out.hist(col, ax=ax, bins = 20)
+#fig.savefig('italy.png')
+    

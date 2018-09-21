@@ -23,6 +23,9 @@ lines = df.index.get_values()
 
 datalist = df.values
 
+output = []
+input_d = [] 
+
 #for post in range(0, 4, 2):
 for post in range(0, len(headers), 2):
     #print(headers[post+1][0], headers[post+1][1], headers[post][1])
@@ -68,4 +71,23 @@ for post in range(0, len(headers), 2):
     for noegle in slettes:
         del dict_data[noegle]
 
+    transform_greece = greece_to_dict()
+    transformed_data = transform_greece.transform([dict_data])
+    output.append(transformed_data[0])
+
     print(headers[post+1][0], clf_EW_GREECE.predict_proba([dict_data]))
+
+#df_out = pd.DataFrame.from_dict(output)
+#
+#import matplotlib.pyplot as plt
+#print(df_out.columns)
+#
+#col = []
+#for p in list(df_out):
+#    if 'ratio' in p:
+#        col.append(p)
+#
+#
+#fig, ax = plt.subplots(figsize =(25,20))
+#df_out.hist(col, ax=ax, bins = 20)
+#fig.savefig('greece.png')
