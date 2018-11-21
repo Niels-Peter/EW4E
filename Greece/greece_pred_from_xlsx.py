@@ -13,11 +13,11 @@ import pickle
 from sklearn.externals import joblib
 from numpy import math
 
-#clf_EW_GREECE = joblib.load('/home/niels-peter/Dokumenter/EW_DK_GREECE.pkl')
-clf_EW_GREECE = joblib.load('EW_DK_GREECE_dummy.pkl')
+clf_EW_GREECE = joblib.load('/home/niels-peter/Dokumenter/EW_DK_GREECE.pkl')
+#clf_EW_GREECE = joblib.load('EW_DK_GREECE_dummy.pkl')
 
-df = pd.read_excel('greece_database.xlsx', header = [0, 1])
-#df = pd.read_excel('/home/niels-peter/Dokumenter/Greece_DBA_Project deliverable_20180312.xlsx', header = [0, 1]) 
+#df = pd.read_excel('greece_database.xlsx', header = [0, 1])
+df = pd.read_excel('/home/niels-peter/Dokumenter/Greece_DBA_Project deliverable_20180312.xlsx', header = [0, 1]) 
 headers = list(df)
 lines = df.index.get_values()
 
@@ -79,6 +79,8 @@ for post in range(0, len(headers), 2):
 
 #df_out = pd.DataFrame.from_dict(output)
 #
+#
+#
 #import matplotlib.pyplot as plt
 #print(df_out.columns)
 #
@@ -91,3 +93,14 @@ for post in range(0, len(headers), 2):
 #fig, ax = plt.subplots(figsize =(25,20))
 #df_out.hist(col, ax=ax, bins = 20)
 #fig.savefig('greece.png')
+#
+#hist_df = joblib.load('../hist_df.pkl')
+#
+#for column in col:
+#    df_out['GR_' + column] = pd.cut(df_out[column], [-10000, -0.01, 0.2, 0.4, 0.6, 0.8, 1, 10000], labels=['<0', '0-0,2', '0,2-0,4', '0,4-0,6', '0,6-0,8', '0,8-1,0', '>1'])
+#    #s2 = pd.Series(df_out['IT_' + column]).value_counts()
+#    #s2 = s.value_counts()
+#    hist_df = hist_df.append(pd.Series(df_out['GR_' + column]).value_counts())
+#
+#joblib.dump(hist_df, '../hist_df.pkl')
+

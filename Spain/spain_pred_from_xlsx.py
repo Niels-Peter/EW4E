@@ -13,15 +13,22 @@ import pickle
 from sklearn.externals import joblib
 from numpy import math
 import os
+from spain_transformation import *
 
-clf_EW_spain = joblib.load('/home/niels-peter/Dokumenter/EW_DK_SPAIN.pkl')
-#clf_EW_spain = joblib.load('EW_DK_SPAIN_dummy.pkl')
+output = []
 
-listen = os.listdir('/home/niels-peter/Dokumenter/100_spanske_Balance_Sheets')
+#clf_EW_spain = joblib.load('/home/niels-peter/Dokumenter/EW_DK_SPAIN.pkl')
+clf_EW_spain = joblib.load('EW_DK_SPAIN_dummy.pkl')
+
+#listen = os.listdir('/home/niels-peter/Dokumenter/100_spanske_Balance_Sheets')
+listen = os.listdir('100_spanske_Balance_Sheets')
+
+
 
 for forekomst in listen:
-    print(forekomst)
-    df = pd.read_excel('/home/niels-peter/Dokumenter/100_spanske_Balance_Sheets/' + forekomst)
+    #print(forekomst)
+    #df = pd.read_excel('/home/niels-peter/Dokumenter/100_spanske_Balance_Sheets/' + forekomst)
+    df = pd.read_excel('100_spanske_Balance_Sheets/' + forekomst)
     datalisten = df.values
     for i in range(0, len(datalisten)):
         if datalisten[i, 0] == 'Assets':
@@ -66,5 +73,10 @@ for forekomst in listen:
         if math.isnan(dict_data[noegle]):
             slettes.append(noegle)
     for noegle in slettes:
-        del dict_data[noegle]   
-    print(clf_EW_spain.predict_proba([dict_data]))
+        del dict_data[noegle] 
+        
+    transform_spain = spain_to_dict()
+    transformed_data = transform_spain.transform([dict_data])
+    output.append(transformed_data[0])
+            
+    print(clf_EW_spain.predict([dict_data]), clf_EW_spain.predict_proba([dict_data]))
